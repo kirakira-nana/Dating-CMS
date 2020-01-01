@@ -1,0 +1,17 @@
+/*
+ * Author:        Pierre-Henry Soria <ph7software@gmail.com>
+ * Copyright:     (c) 2012-2019, Pierre-Henry Soria. All Rights Reserved.
+ * License:       MIT License; See LICENSE.md and COPYRIGHT.md in the root directory.
+ */
+
+.video_duration {
+    opacity: .7;
+    border-radius: 2px;
+    position: absolute;
+    margin: 8px;
+    padding: 2px;
+    background: black;
+    color: white;
+    font-size: 7pt;
+    font-weight: bold;
+}

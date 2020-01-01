@@ -1,0 +1,43 @@
+services:
+  web:
+    image: nginx:1.28-alpine
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ph7builder-app:/var/www:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      php:
+        condition: service_started
+
+  php:
+    build:
+      context: .
+    working_dir: /var/www
+    environment:
+      PH7_CANONICAL_HOST: localhost:8080
+    volumes:
+      - ph7builder-app:/var/www
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ph7builder
+      MYSQL_USER: ph7builder
+      MYSQL_PASSWORD: ph7builder
+      MYSQL_ROOT_PASSWORD: ph7builder-root
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    volumes:
+      - ph7builder-db:/var/lib/mysql
+
+volumes:
+  ph7builder-app:
+  ph7builder-db:

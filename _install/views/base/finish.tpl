@@ -1,0 +1,29 @@
+{include file="inc/header.tpl"}
+
+<h2>{$LANG.finish}</h2>
+
+{include file="inc/errors.tpl"}
+
+<p class="bold">
+    <a href="{$smarty.const.PH7_URL_ROOT}" target="_blank">{$LANG.go_your_site}</a> &nbsp; | &nbsp; <a href="{$smarty.const.PH7_URL_ROOT}{$smarty.const.PH7_ADMIN_MOD}" target="_blank">{$LANG.go_your_admin_panel}</a> (<a href="{$smarty.const.PH7_URL_ROOT}{$smarty.const.PH7_ADMIN_MOD}" target="_blank"><em class="text-info">{$smarty.const.PH7_URL_ROOT}{$smarty.const.PH7_ADMIN_MOD}</em></a>)
+</p>
+
+{if !empty($admin_login_email) && !empty($admin_username)}
+    <ul>
+        <li>{$LANG.admin_url}: <a class="underline" href="{$smarty.const.PH7_URL_ROOT}{$smarty.const.PH7_ADMIN_MOD}" target="_blank"><strong class="text-info">{$smarty.const.PH7_URL_ROOT}{$smarty.const.PH7_ADMIN_MOD}</strong></a></li>
+        <li>{$LANG.admin_login_email}: <strong class="text-info">{$admin_login_email|escape}</strong></li>
+        <li>{$LANG.admin_username}: <strong class="text-info">{$admin_username|escape}</strong></li>
+    </ul>
+{/if}
+
+<p class="bold">{$LANG.next_steps}</p>
+
+<form action="{$smarty.const.PH7_URL_SLUG_INSTALL}finish" method="post">
+    <input type="hidden" name="action_token" value="{$action_token|escape}" />
+    <p>
+        <button class="button" type="submit" name="confirm_remove_install" value="1" onclick="return confirm('{$LANG.confirm_remove_install_folder_auto}')">{$LANG.remove_install_folder_auto}</button><br /><br />
+        <span class="italic">{$LANG.remove_install_folder}</span>
+    </p>
+</form>
+
+{include file="inc/footer.tpl"}

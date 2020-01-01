@@ -1,0 +1,112 @@
+####################
+# Author:         Pierre-Henry Soria <hello@ph7builder.com>
+# Copyright:      (c) 2012-2026, Pierre-Henry Soria. All Rights Reserved.
+# License:        MIT License; See LICENSE.md and COPYRIGHT.md in the root directory.
+####################
+
+# Compatibility-first .htaccess for shared hosting / Plesk installs.
+# Keep only directives that are commonly allowed with standard AllowOverride settings.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    ## Uncomment and adjust RewriteBase only if the app is installed in a subfolder.
+    ## Example: RewriteBase /ph7builder/
+    # RewriteBase /
+
+    <IfModule mod_env.c>
+        # Used by the app to detect mod_rewrite availability.
+        SetEnv HTTP_MOD_REWRITE On
+    </IfModule>
+
+    # Protect hidden/VCS files (except .well-known for ACME challenges)
+    RewriteRule "(^|/)\.(?!well-known/)" - [F,L]
+    RewriteCond %{REQUEST_METHOD} ^TRACE$ [NC]
+    RewriteRule .* - [F,L]
+
+    # Protect internal/development directories in source-checkout deployments.
+    RewriteRule ^(?:_protected|_repository|_tests|_tools|docker)(?:/|$) - [F,L,NC]
+    RewriteRule ^_install/(?:data|vendor)(?:/|$) - [F,L,NC]
+
+    # Protect sensitive root files
+    RewriteRule "(^|/)(composer\.(?:json|lock)|sample\.htaccess|nginx\.conf|Dockerfile|docker-compose\.yml|php(?:unit|cs)\.xml\.dist|error_log)$" - [F,L,NC]
+
+    # Deny direct access to internal text/config-like files,
+    # while keeping standard public TXT files available.
+    RewriteCond %{REQUEST_URI} !/(\.well-known/security\.txt|humans\.txt|robots\.txt|(app-)?ads\.txt)$ [NC]
+    RewriteRule \.(?:cgi|pl|py|sh|bash|sql|tpl|ini|cache|log|lock|tmp|txt|md)$ - [F,L,NC]
+
+    # Only the application and installer front controllers may execute directly.
+    RewriteRule ^(?!(?:index|_install/index)\.php$).+\.php$ - [F,L,NC]
+
+    ### pH7Builder URL Router (required) ###
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php?$1 [L,QSA]
+</IfModule>
+
+### Security and Spam ###
+
+# Deny hidden files/directories even if mod_rewrite is unavailable.
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Deny sensitive config/build/runtime files.
+<FilesMatch "(^composer\.(json|lock)$|^sample\.htaccess$|^nginx\.conf$|^Dockerfile$|^docker-compose\.yml$|^php(unit|cs)\.xml\.dist$|^error_log$|\.env$|\.ini$|\.log$|\.sql$|\.bak$|\.md$|\.lock$|\.tmp$|\.cache$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Keep these text files publicly reachable.
+<FilesMatch "^(security\.txt|humans\.txt|robots\.txt|(app-)?ads\.txt)$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Allow from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always unset X-Powered-By
+</IfModule>
+
+ErrorDocument 400 /error/http/index?code=400
+ErrorDocument 401 /error/http/index?code=401
+ErrorDocument 402 /error/http/index?code=402
+ErrorDocument 403 /error/http/index?code=403
+ErrorDocument 404 /error/http/index?code=404
+ErrorDocument 405 /error/http/index?code=405
+ErrorDocument 500 /error/http/index?code=500
+ErrorDocument 501 /error/http/index?code=501
+ErrorDocument 502 /error/http/index?code=502
+ErrorDocument 504 /error/http/index?code=504
+ErrorDocument 505 /error/http/index?code=505
+
+# MIME types
+<IfModule mod_mime.c>
+    # AddType video/ogg .ogg
+    AddType video/webm .webm
+    AddType video/mp4 .mp4
+    AddType application/rss+xml .xml
+</IfModule>
+
+# Personal pH7Builder extension file
+# AddType application/x-httpd-php .ph7
+# DirectoryIndex init.ph7

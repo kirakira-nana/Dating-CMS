@@ -1,0 +1,96 @@
+<?php
+/**
+ * @author         Pierre-Henry Soria <hello@ph7builder.com>
+ * @copyright      (c) 2012-2019, Pierre-Henry Soria. All Rights Reserved.
+ * @license        MIT License; See LICENSE.md and COPYRIGHT.md in the root directory.
+ * @package        PH7 / App / System / Module / Video / Form / Processing
+ */
+
+declare(strict_types=1);
+
+namespace PH7;
+
+defined('PH7') or exit('Restricted access');
+
+use PH7\Framework\Image\FileStorage as FileStorageImage;
+use PH7\Framework\Mvc\Model\DbConfig;
+use PH7\Framework\Mvc\Model\Engine\Db;
+use PH7\Framework\Mvc\Router\Uri;
+use PH7\Framework\Security\Moderation\Filter;
+use PH7\Framework\Url\Header;
+use PH7\Framework\Util\Various;
+
+class AlbumFormProcess extends Form implements NudityDetectable
+{
+    private const ALBUM_IMAGE_SIZE = 200;
+
+    private string $sApproved;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Resizing and saving the video album thumbnail
+        $oPicture = new FileStorageImage($_FILES['album']['tmp_name']);
+        if (!$oPicture->validate()) {
+            \PFBC\Form::setError('form_video_album', Form::wrongImgFileTypeMsg());
+        } else {
+            $this->sApproved = DbConfig::getSetting('videoManualApproval') == 0 ? '1' : '0';
+
+            if ($this->isNudityFilterEligible()) {
+                $this->checkNudityFilter();
+            }
+
+            $sFileName = Various::genRnd($oPicture->getFileName(), 1) . '-thumb.' . $oPicture->getExt();
+
+            (new VideoModel)->addAlbum(
+                $this->session->get('member_id'),
+                MediaCore::cleanTitle($this->httpRequest->post('name')),
+                $this->httpRequest->post('description'),
+                $sFileName,
+                $this->dateTime->get()->dateTime('Y-m-d H:i:s'),
+                $this->sApproved
+            );
+            $iLastAlbumId = (int)Db::getInstance()->lastInsertId();
+
+            $oPicture->square(self::ALBUM_IMAGE_SIZE);
+
+            /* Set watermark text on thumbnail */
+            $sWatermarkText = DbConfig::getSetting('watermarkTextImage');
+            if (!empty(trim($sWatermarkText))) {
+                $iSizeWatermarkText = DbConfig::getSetting('sizeWatermarkTextImage');
+                $oPicture->watermarkText($sWatermarkText, $iSizeWatermarkText);
+            }
+
+            $sPath = PH7_PATH_PUBLIC_DATA_SYS_MOD . 'video/file/' . $this->session->get('member_username') . PH7_DS . $iLastAlbumId . PH7_DS;
+
+            $this->file->createDir($sPath);
+
+            $oPicture->save($sPath . $sFileName);
+
+            Video::clearCache();
+
+            Header::redirect(
+                Uri::get(
+                    'video',
+                    'main',
+                    'addvideo',
+                    $iLastAlbumId
+                )
+            );
+        }
+    }
+
+    public function isNudityFilterEligible(): bool
+    {
+        return $this->sApproved === '1' && DbConfig::getSetting('nudityFilter');
+    }
+
+    public function checkNudityFilter(): void
+    {
+        if (Filter::isNudity($_FILES['album']['tmp_name'])) {
+            // The image doesn't seem suitable for everyone. Overwrite "$sApproved" and set the image for approval
+            $this->sApproved = '0';
+        }
+    }
+}

@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @author         Pierre-Henry Soria <hello@ph7builder.com>
+ * @copyright      (c) 2018-2019, Pierre-Henry Soria. All Rights Reserved.
+ * @license        MIT License; See LICENSE.md and COPYRIGHT.md in the root directory.
+ */
+
+namespace PH7;
+
+use PH7\Framework\Math\Measure\Year as YearMeasure;
+
+class UserBirthDateCore
+{
+    public const DEFAULT_AGE = 30;
+    public const BIRTHDATE_DELIMITER = '-';
+    public const NUMBER_ARRAY_ELEMENTS = 3;
+
+    /**
+     * @param string $sBirthDate YYYY-MM-DD format
+     *
+     * @return int
+     */
+    public static function getAgeFromBirthDate($sBirthDate)
+    {
+        $aAge = explode(self::BIRTHDATE_DELIMITER, $sBirthDate);
+
+        if (self::isInvalidBirthDate($aAge)) {
+            return self::DEFAULT_AGE;
+        }
+
+        return (new YearMeasure($aAge[0], $aAge[1], $aAge[2]))->get();
+    }
+
+    /**
+     * @return bool
+     */
+    private static function isInvalidBirthDate(array $aAge)
+    {
+        $iAgeElements = count($aAge);
+
+        return $iAgeElements < self::NUMBER_ARRAY_ELEMENTS
+            || $iAgeElements > self::NUMBER_ARRAY_ELEMENTS;
+    }
+}

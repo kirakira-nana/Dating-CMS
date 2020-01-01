@@ -1,0 +1,45 @@
+name: Check Composer
+
+on: [ push, pull_request ]
+
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ 'ubuntu-latest', 'windows-2022', 'macos-latest' ]
+        php-versions: [ '8.2', '8.3', '8.4', '8.5' ]
+    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          tools: composer:v2
+          coverage: none
+
+      - name: Check Composer Version
+        run: composer -V
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        shell: bash
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Validate composer.json & composer.lock
+        run: composer validate --strict
+
+      - name: Audit dependencies for known security vulnerabilities
+        # Checks composer.lock against the security advisory databases; fails the build on known CVEs
+        run: composer audit --locked

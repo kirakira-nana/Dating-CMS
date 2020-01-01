@@ -1,0 +1,108 @@
+<?php
+/**
+ * @author         Pierre-Henry Soria <hello@ph7builder.com>
+ * @copyright      (c) 2013-2019, Pierre-Henry Soria. All Rights Reserved.
+ * @license        MIT License; See LICENSE.md and COPYRIGHT.md in the root directory.
+ * @package        PH7 / App / System / Module / Field / Inc / Class
+ */
+
+namespace PH7;
+
+use PH7\Framework\Cache\Cache;
+
+class Field
+{
+    const MEMBER_UNMODIFIABLE_FIELDS = [
+        'profileid',
+        'middlename',
+        'description',
+        'punchline',
+        'city',
+        'state',
+        'zipcode',
+        'country',
+        'phone',
+        'height',
+        'weight'
+    ];
+
+    const AFFILIATE_UNMODIFIABLE_FIELDS = [
+        'profileid',
+        'middlename',
+        'description',
+        'address',
+        'phone',
+        'city',
+        'state',
+        'zipcode',
+        'country',
+        'website'
+    ];
+
+    /**
+     * Block constructing.
+     */
+    private function __construct()
+    {
+    }
+
+    /**
+     * Get table.
+     *
+     * @param string $sMod Mod name ("user" or "aff").
+     *
+     * @return string
+     */
+    public static function getTable($sMod)
+    {
+        return (strtolower($sMod) === 'aff' ? DbTableName::AFFILIATE : DbTableName::MEMBER) . '_info';
+    }
+
+    /**
+     * Checks if the field exists.
+     *
+     * @param string $sMod Mod name ("user" or "aff").
+     * @param string $sField Field name.
+     *
+     * @return bool
+     */
+    public static function doesExist($sMod, $sField)
+    {
+        $aFields = (new FieldModel(static::getTable($sMod)))->all();
+
+        return in_array(
+            strtolower($sField),
+            array_map('strtolower', $aFields),
+            true
+        );
+    }
+
+    /**
+     * Checks if the field is editable.
+     *
+     * @param string $sMod Mod name ("user" or "aff").
+     * @param string $sField
+     *
+     * @return bool
+     */
+    public static function unmodifiable($sMod, $sField)
+    {
+        $aFields = $sMod === 'aff' ? static::AFFILIATE_UNMODIFIABLE_FIELDS : static::MEMBER_UNMODIFIABLE_FIELDS;
+
+        return in_array(strtolower($sField), $aFields, true);
+    }
+
+    /**
+     * Clean UserCoreModel cache.
+     *
+     * @return void
+     */
+    public static function clearCache()
+    {
+        (new Cache)->start(
+            UserCoreModel::CACHE_GROUP,
+            null,
+            null
+        )->clear();
+    }
+}

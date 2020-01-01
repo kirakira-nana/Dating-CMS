@@ -1,0 +1,14 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+    Options +FollowSymLinks
+
+    <IfModule mod_env.c>
+        # Tell PHP that the mod_rewrite module is ENABLED.
+        SetEnv HTTP_MOD_REWRITE On
+    </IfModule>
+
+    RewriteEngine On
+    RewriteRule ^([a-z_]+)/?$ index.php?a=$1 [L]
+</IfModule>

@@ -1,0 +1,98 @@
+<?php
+/**
+ * @author         Pierre-Henry Soria <hello@ph7builder.com>
+ * @copyright      (c) 2012-2026, Pierre-Henry Soria. All Rights Reserved.
+ * @license        MIT License; See LICENSE.md and COPYRIGHT.md in the root directory.
+ * @package        PH7 / App / System / Module / Admin / From
+ */
+
+namespace PH7;
+
+defined('PH7') or exit('Restricted access');
+
+use PFBC\Element\Button;
+use PFBC\Element\Hidden;
+use PFBC\Element\Textarea;
+use PFBC\Element\Token;
+use PH7\Framework\File\File;
+use PH7\Framework\Layout\Tpl\Engine\PH7Tpl\PH7Tpl;
+use PH7\Framework\Url\Header;
+use RuntimeException;
+
+class PublicFileForm
+{
+    private const ALLOWED_EXTENSIONS = [
+        PH7Tpl::TEMPLATE_FILE_EXT,
+        '.css',
+        '.js'
+    ];
+
+    public static function display(): void
+    {
+        if (isset($_POST['submit_file'])) {
+            if (\PFBC\Form::isValid($_POST['submit_file'])) {
+                new PublicFileFormProcess;
+            }
+
+            Header::redirect();
+        }
+
+        try {
+            if (!$rData = @file_get_contents(self::getRealPath())) {
+                // First, remove the previous error message (if existing) to avoid duplicate error messages
+                \PFBC\Form::clearErrors('form_file');
+
+                \PFBC\Form::setError('form_file', t('The following requested file was not found: %0%', escape(PH7_PATH_ROOT . ($_GET['file'] ?? ''))));
+            }
+
+            $oForm = new \PFBC\Form('form_file');
+            $oForm->configure(['action' => '']);
+            $oForm->addElement(new Hidden('submit_file', 'form_file'));
+            $oForm->addElement(new Token('file'));
+            $oForm->addElement(
+                new Textarea(
+                    t('File Contents'),
+                    'content',
+                    [
+                        'value' => $rData,
+                        'style' => 'height:50rem',
+                        'required' => 1
+                    ]
+                )
+            );
+            $oForm->addElement(new Button(t('Save')));
+            $oForm->render();
+        } catch (RuntimeException $oExcept) {
+            self::showErrorMessage($oExcept);
+        }
+    }
+
+    public static function getRealPath(?string $sFile = null): string
+    {
+        $sFullPath = PH7_PATH_ROOT . ($sFile ?? ($_GET['file'] ?? ''));
+        $mRealPublicPath = realpath(PH7_PATH_TPL);
+        $mRealFullPath = realpath($sFullPath);
+
+        if (self::isInvalidEditablePublicFilePath($mRealFullPath, $mRealPublicPath)) {
+            throw new RuntimeException(
+                t('Invalid specified path, not authorized by the system!')
+            );
+        }
+
+        return $mRealFullPath;
+    }
+
+    private static function isInvalidEditablePublicFilePath(string|bool $mRealFullPath, string|bool $mRealPublicPath): bool
+    {
+        return $mRealFullPath === false ||
+            $mRealPublicPath === false ||
+            !File::isPathInsideDirectory($mRealFullPath, $mRealPublicPath) ||
+            !is_file($mRealFullPath) ||
+            !in_array(File::getFileExtWithDot($mRealFullPath), self::ALLOWED_EXTENSIONS, true);
+    }
+
+    private static function showErrorMessage(RuntimeException $oExcept): void
+    {
+        printf('<p class="col-md-6 col-md-offset-4 red">%s</p>', $oExcept->getMessage());
+    }
+}

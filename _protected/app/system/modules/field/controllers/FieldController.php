@@ -1,0 +1,102 @@
+<?php
+
+/**
+ * @author         Pierre-Henry Soria <hello@ph7builder.com>
+ * @copyright      (c) 2013-2019, Pierre-Henry Soria. All Rights Reserved.
+ * @license        MIT License; See LICENSE.md and COPYRIGHT.md in the root directory.
+ */
+
+namespace PH7;
+
+use PH7\Framework\Layout\Html\Design;
+use PH7\Framework\Mvc\Router\Uri;
+use PH7\Framework\Url\Header;
+
+class FieldController extends Controller
+{
+    /** @var string */
+    private $sTitle;
+
+    public function index()
+    {
+        Header::redirect(
+            Uri::get(
+                'field',
+                'field',
+                'all',
+                'user'
+            )
+        );
+    }
+
+    public function all($sMod = '')
+    {
+        $this->sTitle = t('All Fields');
+        $this->view->page_title = $this->sTitle;
+        $this->view->h2_title = $this->sTitle;
+
+        $oFieldModel = new FieldModel(Field::getTable($sMod));
+        $this->view->fields = $oFieldModel->all();
+        $this->view->mod = $sMod;
+
+        $this->output();
+    }
+
+    public function add()
+    {
+        $this->sTitle = t('Add a Field');
+        $this->view->page_title = $this->sTitle;
+        $this->view->h2_title = $this->sTitle;
+
+        $this->output();
+    }
+
+    public function edit($sMod = '', $sName = '')
+    {
+        if (Field::doesExist($sMod, $sName)) {
+            $this->sTitle = t('Edit a Field');
+            $this->view->page_title = $this->sTitle;
+            $this->view->h2_title = $this->sTitle;
+
+            $this->output();
+        } else {
+            $this->displayPageNotFound(t('Field "%0%" is not found!', $sName));
+        }
+    }
+
+    public function delete()
+    {
+        $this->requireActionToken('field', 'field', 'delete');
+
+        $bStatus = false;
+        $mMod = $_POST['mod'] ?? null;
+        $mName = $_POST['name'] ?? null;
+        $sMod = is_string($mMod) && in_array($mMod, ['user', 'aff'], true) ? $mMod : 'user';
+
+        if (
+            FieldModel::isValidColumnName($mName)
+            && !Field::unmodifiable($sMod, $mName)
+            && Field::doesExist($sMod, $mName)
+        ) {
+            $bStatus = (new FieldModel(Field::getTable($sMod), $mName))->delete();
+        }
+
+        if ($bStatus) {
+            Field::clearCache();
+        }
+
+        $sMsg = $bStatus ? t('The field has been deleted') : t('An error occurred while deleting the field.');
+        $sMsgType = $bStatus ? Design::SUCCESS_TYPE : Design::ERROR_TYPE;
+
+        Header::redirect(
+            Uri::get(
+                'field',
+                'field',
+                'all',
+                $sMod
+            ),
+            $sMsg,
+            $sMsgType
+        );
+    }
+}

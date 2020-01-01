@@ -1,0 +1,61 @@
+_constants.php
+
+_install/data/caches/smarty_cache/*
+_install/data/caches/smarty_compile/*
+_install/data/caches/install-state.json
+_install/data/caches/install-token.hash
+.ph7builder-install-removal-*
+_install/vendor/*
+_install/composer.lock
+
+_protected/app/configs/config.ini
+_protected/app/system/core/assets/cron/_delay/
+_protected/data/tmp/*
+_protected/data/log/pH7log/*
+_protected/data/backup/*
+_protected/data/cache/*
+!_protected/data/cache/.keep
+_protected/vendor/*
+
+data/*
+
+composer.phar
+.php_cs
+phpcs.xml
+.php_cs.cache
+.php-cs-fixer.php
+.php-cs-fixer.cache
+
+# TMP/Log
+*.log
+*.tmp
+
+# PHPUnit
+coverage
+phpunit.xml
+.phpunit.result.cache
+phpunit.phar
+
+# PHPStorm IDE folder
+.idea
+
+## Gettext ##
+*.mo
+
+## OS ##
+
+# Linux
+*~
+*.swp
+# KDE
+.directory
+
+# Windows
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# Mac OS
+.DS_Store*
+._*
+.phpunit.cache

@@ -1,0 +1,333 @@
+<?php
+
+/**
+ * @title          Main Controller
+ *
+ * @author         Pierre-Henry Soria <hello@ph7builder.com>
+ * @copyright      (c) 2012-2026, Pierre-Henry Soria and pH7Builder contributors.
+ * @license        MIT License; See LICENSE.md and COPYRIGHT.md in the root directory.
+ */
+
+declare(strict_types=1);
+
+namespace PH7;
+
+use PH7\Framework\Core\Kernel;
+use PH7\Framework\Date\Various as VDate;
+use PH7\Framework\Layout\Html\Meta;
+use PH7\Framework\Module\Various as SysMod;
+use PH7\Framework\Mvc\Model\DbConfig;
+use PH7\Framework\Mvc\Router\Uri;
+use PH7\Framework\Security\Version;
+use PH7\Framework\Url\Header;
+
+class MainController extends Controller
+{
+    private const DURATION_SITE_CONSIDERED_NEW = '8 days';
+    private const SOFTWARE_BLOG_URL = 'https://ph7builder.com/blog/';
+
+    public function index(): void
+    {
+        $this->view->page_title = t('Admin Panel');
+        $this->view->h1_title = t('Admin Dashboard');
+        $this->view->h2_title = t('Hi <em>%0%</em>! Welcome back to your site! 🤗', $this->session->get('admin_first_name'));
+        $this->view->h3_title = t('How are you doing today? 🔆');
+
+        $this->view->is_news_feed = (bool)DbConfig::getSetting('isSoftwareNewsFeed');
+        $this->view->software_blog_url = self::SOFTWARE_BLOG_URL;
+        $this->view->show_get_started_section = $this->isWebsiteNew();
+        $this->view->is_profile_faker_enabled = SysMod::isEnabled('profile-faker');
+        $this->checkUpdates();
+        $this->addStats();
+
+        $this->output();
+    }
+
+    public function stat(): void
+    {
+        $this->view->page_title = t('Statistics');
+        $this->view->h1_title = t('Site statistics');
+
+        $this->addStats();
+
+        $this->output();
+    }
+
+    public function login(): void
+    {
+        // Prohibit the referencing in search engines of the admin panel
+        $this->view->header = Meta::NOINDEX;
+
+        $this->view->page_title = t('Sign in to Admin Panel');
+        $this->view->h1_title = t('Admin Panel - Login');
+        $this->output();
+    }
+
+    public function logout(): void
+    {
+        (new Admin())->logout($this->session);
+
+        Header::redirect(
+            Uri::get(PH7_ADMIN_MOD, 'main', 'login'),
+            t('You are successfully logged out.')
+        );
+    }
+
+    protected function addStats(): void
+    {
+        $this->addCssFile();
+
+        $oStatModel = new StatisticCoreModel();
+
+        // Get the since date of the website
+        $this->view->since_date = $this->dateTime->get(StatisticCoreModel::getDateOfCreation())->date();
+
+        // ---------- Number of Logins Members ----------//
+
+        // All Members
+        $this->view->today_login_members = $oStatModel->totalLogins(DbTableName::MEMBER, 1);
+        $this->view->week_login_members = $oStatModel->totalLogins(DbTableName::MEMBER, 7);
+        $this->view->month_login_members = $oStatModel->totalLogins(DbTableName::MEMBER, 31);
+        $this->view->year_login_members = $oStatModel->totalLogins(DbTableName::MEMBER, 365);
+        $this->view->login_members = $oStatModel->totalLogins();
+
+        // Men Members
+        $this->view->today_login_male_members = $oStatModel->totalLogins(DbTableName::MEMBER, 1, GenderTypeUserCore::MALE);
+        $this->view->week_login_male_members = $oStatModel->totalLogins(DbTableName::MEMBER, 7, GenderTypeUserCore::MALE);
+        $this->view->month_login_male_members = $oStatModel->totalLogins(DbTableName::MEMBER, 31, GenderTypeUserCore::MALE);
+        $this->view->year_login_male_members = $oStatModel->totalLogins(DbTableName::MEMBER, 365, GenderTypeUserCore::MALE);
+        $this->view->login_male_members = $oStatModel->totalLogins(DbTableName::MEMBER, 0, GenderTypeUserCore::MALE);
+
+        // Women Members
+        $this->view->today_login_female_members = $oStatModel->totalLogins(DbTableName::MEMBER, 1, GenderTypeUserCore::FEMALE);
+        $this->view->week_login_female_members = $oStatModel->totalLogins(DbTableName::MEMBER, 7, GenderTypeUserCore::FEMALE);
+        $this->view->month_login_female_members = $oStatModel->totalLogins(DbTableName::MEMBER, 31, GenderTypeUserCore::FEMALE);
+        $this->view->year_login_female_members = $oStatModel->totalLogins(DbTableName::MEMBER, 365, GenderTypeUserCore::FEMALE);
+        $this->view->login_female_members = $oStatModel->totalLogins(DbTableName::MEMBER, 0, GenderTypeUserCore::FEMALE);
+
+        // Couple Members
+        $this->view->today_login_couple_members = $oStatModel->totalLogins(DbTableName::MEMBER, 1, GenderTypeUserCore::COUPLE);
+        $this->view->week_login_couple_members = $oStatModel->totalLogins(DbTableName::MEMBER, 7, GenderTypeUserCore::COUPLE);
+        $this->view->month_login_couple_members = $oStatModel->totalLogins(DbTableName::MEMBER, 31, GenderTypeUserCore::COUPLE);
+        $this->view->year_login_couple_members = $oStatModel->totalLogins(DbTableName::MEMBER, 365, GenderTypeUserCore::COUPLE);
+        $this->view->login_couple_members = $oStatModel->totalLogins(DbTableName::MEMBER, 0, GenderTypeUserCore::COUPLE);
+
+        // ---------- Number of Logins Affiliates ----------//
+
+        // All Affiliates
+        $this->view->today_login_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 1);
+        $this->view->week_login_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 7);
+        $this->view->month_login_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 31);
+        $this->view->year_login_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 365);
+        $this->view->login_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE);
+
+        // Men Affiliates
+        $this->view->today_login_male_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 1, GenderTypeUserCore::MALE);
+        $this->view->week_login_male_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 7, GenderTypeUserCore::MALE);
+        $this->view->month_login_male_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 31, GenderTypeUserCore::MALE);
+        $this->view->year_login_male_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 365, GenderTypeUserCore::MALE);
+        $this->view->login_male_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 0, GenderTypeUserCore::MALE);
+
+        // Women Affiliates
+        $this->view->today_login_female_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 1, GenderTypeUserCore::FEMALE);
+        $this->view->week_login_female_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 7, GenderTypeUserCore::FEMALE);
+        $this->view->month_login_female_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 31, GenderTypeUserCore::FEMALE);
+        $this->view->year_login_female_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 365, GenderTypeUserCore::FEMALE);
+        $this->view->login_female_affiliate = $oStatModel->totalLogins(DbTableName::AFFILIATE, 0, GenderTypeUserCore::FEMALE);
+
+        // ---------- Number of Logins Admins ----------//
+
+        // All Admins
+        $this->view->today_login_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 1);
+        $this->view->week_login_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 7);
+        $this->view->month_login_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 31);
+        $this->view->year_login_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 365);
+        $this->view->login_admins = $oStatModel->totalLogins(DbTableName::ADMIN);
+
+        // Men Admins
+        $this->view->today_login_male_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 1, GenderTypeUserCore::MALE);
+        $this->view->week_login_male_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 7, GenderTypeUserCore::MALE);
+        $this->view->month_login_male_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 31, GenderTypeUserCore::MALE);
+        $this->view->year_login_male_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 365, GenderTypeUserCore::MALE);
+        $this->view->login_male_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 0, GenderTypeUserCore::MALE);
+
+        // Women Admins
+        $this->view->today_login_female_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 1, GenderTypeUserCore::FEMALE);
+        $this->view->week_login_female_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 7, GenderTypeUserCore::FEMALE);
+        $this->view->month_login_female_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 31, GenderTypeUserCore::FEMALE);
+        $this->view->year_login_female_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 365, GenderTypeUserCore::FEMALE);
+        $this->view->login_female_admins = $oStatModel->totalLogins(DbTableName::ADMIN, 0, GenderTypeUserCore::FEMALE);
+
+        // ---------- Members Registrations ----------//
+
+        // All Members
+        $this->view->today_total_members = $oStatModel->totalMembers(1);
+        $this->view->week_total_members = $oStatModel->totalMembers(7);
+        $this->view->month_total_members = $oStatModel->totalMembers(31);
+        $this->view->year_total_members = $oStatModel->totalMembers(365);
+        $this->view->total_members = $oStatModel->totalMembers();
+
+        // Men Members
+        $this->view->today_total_male_members = $oStatModel->totalMembers(1, GenderTypeUserCore::MALE);
+        $this->view->week_total_male_members = $oStatModel->totalMembers(7, GenderTypeUserCore::MALE);
+        $this->view->month_total_male_members = $oStatModel->totalMembers(31, GenderTypeUserCore::MALE);
+        $this->view->year_total_male_members = $oStatModel->totalMembers(365, GenderTypeUserCore::MALE);
+        $this->view->total_male_members = $oStatModel->totalMembers(0, GenderTypeUserCore::MALE);
+
+        // Women Members
+        $this->view->today_total_female_members = $oStatModel->totalMembers(1, GenderTypeUserCore::FEMALE);
+        $this->view->week_total_female_members = $oStatModel->totalMembers(7, GenderTypeUserCore::FEMALE);
+        $this->view->month_total_female_members = $oStatModel->totalMembers(31, GenderTypeUserCore::FEMALE);
+        $this->view->year_total_female_members = $oStatModel->totalMembers(365, GenderTypeUserCore::FEMALE);
+        $this->view->total_female_members = $oStatModel->totalMembers(0, GenderTypeUserCore::FEMALE);
+
+        // Couple Members
+        $this->view->today_total_couple_members = $oStatModel->totalMembers(1, GenderTypeUserCore::COUPLE);
+        $this->view->week_total_couple_members = $oStatModel->totalMembers(7, GenderTypeUserCore::COUPLE);
+        $this->view->month_total_couple_members = $oStatModel->totalMembers(31, GenderTypeUserCore::COUPLE);
+        $this->view->year_total_couple_members = $oStatModel->totalMembers(365, GenderTypeUserCore::COUPLE);
+        $this->view->total_couple_members = $oStatModel->totalMembers(0, GenderTypeUserCore::COUPLE);
+
+        // ---------- Affiliates Registrations ----------//
+
+        // All Affiliates
+        $this->view->today_total_affiliate = $oStatModel->totalAffiliates(1);
+        $this->view->week_total_affiliate = $oStatModel->totalAffiliates(7);
+        $this->view->month_total_affiliate = $oStatModel->totalAffiliates(31);
+        $this->view->year_total_affiliate = $oStatModel->totalAffiliates(365);
+        $this->view->total_affiliate = $oStatModel->totalAffiliates();
+
+        // Men Affiliates
+        $this->view->today_total_male_affiliate = $oStatModel->totalAffiliates(1, GenderTypeUserCore::MALE);
+        $this->view->week_total_male_affiliate = $oStatModel->totalAffiliates(7, GenderTypeUserCore::MALE);
+        $this->view->month_total_male_affiliate = $oStatModel->totalAffiliates(31, GenderTypeUserCore::MALE);
+        $this->view->year_total_male_affiliate = $oStatModel->totalAffiliates(365, GenderTypeUserCore::MALE);
+        $this->view->total_male_affiliate = $oStatModel->totalAffiliates(0, GenderTypeUserCore::MALE);
+
+        // Women Affiliates
+        $this->view->today_total_female_affiliate = $oStatModel->totalAffiliates(1, GenderTypeUserCore::FEMALE);
+        $this->view->week_total_female_affiliate = $oStatModel->totalAffiliates(7, GenderTypeUserCore::FEMALE);
+        $this->view->month_total_female_affiliate = $oStatModel->totalAffiliates(31, GenderTypeUserCore::FEMALE);
+        $this->view->year_total_female_affiliate = $oStatModel->totalAffiliates(365, GenderTypeUserCore::FEMALE);
+        $this->view->total_female_affiliate = $oStatModel->totalAffiliates(0, GenderTypeUserCore::FEMALE);
+
+        // ---------- Admins Registrations ----------//
+
+        // All Admins
+        $this->view->today_total_admins = $oStatModel->totalAdmins(1);
+        $this->view->week_total_admins = $oStatModel->totalAdmins(7);
+        $this->view->month_total_admins = $oStatModel->totalAdmins(31);
+        $this->view->year_total_admins = $oStatModel->totalAdmins(365);
+        $this->view->total_admins = $oStatModel->totalAdmins();
+
+        // Men Admins
+        $this->view->today_total_male_admins = $oStatModel->totalAdmins(1, GenderTypeUserCore::MALE);
+        $this->view->week_total_male_admins = $oStatModel->totalAdmins(7, GenderTypeUserCore::MALE);
+        $this->view->month_total_male_admins = $oStatModel->totalAdmins(31, GenderTypeUserCore::MALE);
+        $this->view->year_total_male_admins = $oStatModel->totalAdmins(365, GenderTypeUserCore::MALE);
+        $this->view->total_male_admins = $oStatModel->totalAdmins(0, GenderTypeUserCore::MALE);
+
+        // Women Admins
+        $this->view->today_total_female_admins = $oStatModel->totalAdmins(1, GenderTypeUserCore::FEMALE);
+        $this->view->week_total_female_admins = $oStatModel->totalAdmins(7, GenderTypeUserCore::FEMALE);
+        $this->view->month_total_female_admins = $oStatModel->totalAdmins(31, GenderTypeUserCore::FEMALE);
+        $this->view->year_total_female_admins = $oStatModel->totalAdmins(365, GenderTypeUserCore::FEMALE);
+        $this->view->total_female_admins = $oStatModel->totalAdmins(0, GenderTypeUserCore::FEMALE);
+
+        // ---------- Blogs ----------//
+
+        $this->view->today_total_blogs = $oStatModel->totalBlogs(1);
+        $this->view->week_total_blogs = $oStatModel->totalBlogs(7);
+        $this->view->month_total_blogs = $oStatModel->totalBlogs(31);
+        $this->view->year_total_blogs = $oStatModel->totalBlogs(365);
+        $this->view->total_blogs = $oStatModel->totalBlogs();
+
+        // ---------- Notes ----------//
+
+        $this->view->today_total_notes = $oStatModel->totalNotes(1);
+        $this->view->week_total_notes = $oStatModel->totalNotes(7);
+        $this->view->month_total_notes = $oStatModel->totalNotes(31);
+        $this->view->year_total_notes = $oStatModel->totalNotes(365);
+        $this->view->total_notes = $oStatModel->totalNotes();
+
+        // ---------- Messages ----------//
+
+        $this->view->today_total_mails = $oStatModel->totalMails(1);
+        $this->view->week_total_mails = $oStatModel->totalMails(7);
+        $this->view->month_total_mails = $oStatModel->totalMails(31);
+        $this->view->year_total_mails = $oStatModel->totalMails(365);
+        $this->view->total_mails = $oStatModel->totalMails();
+
+        // ---------- Comments ----------//
+
+        // Profile Comments
+        $this->view->today_total_profile_comments = $oStatModel->totalProfileComments(1);
+        $this->view->week_total_profile_comments = $oStatModel->totalProfileComments(7);
+        $this->view->month_total_profile_comments = $oStatModel->totalProfileComments(31);
+        $this->view->year_total_profile_comments = $oStatModel->totalProfileComments(365);
+        $this->view->total_profile_comments = $oStatModel->totalProfileComments();
+
+        // Picture Comments
+        $this->view->today_total_picture_comments = $oStatModel->totalPictureComments(1);
+        $this->view->week_total_picture_comments = $oStatModel->totalPictureComments(7);
+        $this->view->month_total_picture_comments = $oStatModel->totalPictureComments(31);
+        $this->view->year_total_picture_comments = $oStatModel->totalPictureComments(365);
+        $this->view->total_picture_comments = $oStatModel->totalPictureComments();
+
+        // Video Comments
+        $this->view->today_total_video_comments = $oStatModel->totalVideoComments(1);
+        $this->view->week_total_video_comments = $oStatModel->totalVideoComments(7);
+        $this->view->month_total_video_comments = $oStatModel->totalVideoComments(31);
+        $this->view->year_total_video_comments = $oStatModel->totalVideoComments(365);
+        $this->view->total_video_comments = $oStatModel->totalVideoComments();
+
+        // Blog Comments
+        $this->view->today_total_blog_comments = $oStatModel->totalBlogComments(1);
+        $this->view->week_total_blog_comments = $oStatModel->totalBlogComments(7);
+        $this->view->month_total_blog_comments = $oStatModel->totalBlogComments(31);
+        $this->view->year_total_blog_comments = $oStatModel->totalBlogComments(365);
+        $this->view->total_blog_comments = $oStatModel->totalBlogComments();
+
+        // Note Comments
+        $this->view->today_total_note_comments = $oStatModel->totalNoteComments(1);
+        $this->view->week_total_note_comments = $oStatModel->totalNoteComments(7);
+        $this->view->month_total_note_comments = $oStatModel->totalNoteComments(31);
+        $this->view->year_total_note_comments = $oStatModel->totalNoteComments(365);
+        $this->view->total_note_comments = $oStatModel->totalNoteComments();
+
+        unset($oStatModel);
+    }
+
+    protected function checkUpdates(): void
+    {
+        if (Version::isUpdateEligible()) {
+            $aLatestVerInfo = Version::getLatestInfo();
+            $sLatestVer = t('%0%, build %1%', $aLatestVerInfo['version'], $aLatestVerInfo['build']);
+
+            $sMsg = '<h3>' . t('🍰 A <a href="%0%" target="_blank" rel="noopener">New Release</a> 🎁 just for YOU! 😍', Kernel::SOFTWARE_RELEASE_URL) . '</h3>';
+            $sMsg .= t('%software_name% <strong>%0%</strong> is available! Update it today to keep your site safe and stable.', $sLatestVer);
+            $sMsg .= '<br /><br />';
+            $sMsg .= t('👉 <a href="%0%" target="_blank" rel="noopener">Review the manual upgrade steps</a> 👈', PH7_URL_ROOT . 'asset/file/Upgrade');
+
+            $this->design->setMessage($sMsg);
+        }
+    }
+
+    private function isWebsiteNew(): bool
+    {
+        $iSiteCreationDate = VDate::getTime(StatisticCoreModel::getDateOfCreation());
+
+        return VDate::setTime('-' . self::DURATION_SITE_CONSIDERED_NEW) <= $iSiteCreationDate;
+    }
+
+    /**
+     * Adding the common CSS for the statistic chart.
+     */
+    private function addCssFile(): void
+    {
+        $this->design->addCss(
+            PH7_LAYOUT . PH7_SYS . PH7_MOD . $this->registry->module . PH7_SH . PH7_TPL . PH7_TPL_MOD_NAME . PH7_SH . PH7_CSS,
+            'general.css'
+        );
+    }
+}

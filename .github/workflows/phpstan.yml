@@ -1,0 +1,42 @@
+name: PHPStan
+
+on: [ push, pull_request ]
+
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ 'ubuntu-latest' ]
+        php-versions: [ '8.2', '8.3', '8.4', '8.5' ]
+    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          tools: composer:v2
+          extensions: curl, dom, exif, gd, hash, json, libxml, zip, zlib, mbstring, pdo_mysql, bcmath, gmp
+          coverage: none
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        shell: bash
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Run PHPStan
+        run: _protected/vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --memory-limit=1G --error-format=github

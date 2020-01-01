@@ -1,0 +1,22 @@
+/* PROJECT */
+
+Name: pH7Builder
+Website: https://ph7builder.com
+Source: https://github.com/pH7Software/pH7-Social-Dating-CMS
+Organization: https://github.com/pH7Software
+
+/* PEOPLE */
+
+Creator: Pierre-Henry Soria
+Website: https://ph7.me
+GitHub: https://github.com/pH-7
+Contributors: https://github.com/pH7Software/pH7-Social-Dating-CMS/graphs/contributors
+
+/* TECHNOLOGY */
+
+Application: PHP 8.2+, MySQL 8.0+, HTML, CSS, JavaScript
+Architecture: modular MVC, pH7Framework, PH7Tpl
+License: MIT
+
+Contributing: https://github.com/pH7Software/pH7-Social-Dating-CMS/blob/18.x/CONTRIBUTING.md
+Translations: https://github.com/pH7Software/pH7-Internationalization

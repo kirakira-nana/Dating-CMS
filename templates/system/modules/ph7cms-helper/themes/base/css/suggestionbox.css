@@ -1,0 +1,11 @@
+/*
+ * Author:        Pierre-Henry Soria <hello@ph7builder.com>
+ * Copyright:     (c) 2020, Pierre-Henry Soria. All Rights Reserved.
+ * License:       MIT License; See LICENSE.md and COPYRIGHT.md in the root directory.
+ */
+
+#box_block h1 a,
+#box_block h2 a,
+#box_block h3 a {
+    text-decoration: underline;
+}

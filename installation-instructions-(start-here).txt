@@ -1,0 +1,40 @@
+pH7Builder installation
+=======================
+
+Requirements: PHP 8.2+ and MySQL 8.0+ with the PHP extensions listed in
+composer.json. Older MySQL versions and MariaDB are not verified or supported
+for this release. The versioned release ZIP includes production dependencies;
+a source checkout requires Composer 2.
+
+Production Quick Start:
+https://github.com/pH7Software/pH7-Social-Dating-CMS/blob/18.x/docs/QUICK_START.md
+
+Launch Checklist:
+https://github.com/pH7Software/pH7-Social-Dating-CMS/blob/18.x/docs/LAUNCH_CHECKLIST.md
+
+Release guides:
+https://github.com/pH7Software/pH7-Social-Dating-CMS/tree/18.x/docs
+
+Composer installation of this release:
+composer create-project ph7software/ph7builder:18.6.1 pH7Builder-v18.6.1 --no-dev --prefer-dist
+
+Other distribution listings:
+Softaculous: https://www.softaculous.com/apps/socialnetworking/pH7Builder
+SourceForge: https://sourceforge.net/projects/ph7socialdating/
+
+Softaculous and SourceForge can lag behind GitHub and Packagist. Confirm the
+exact offered version before installing or upgrading.
+
+With PHP, MySQL, and the web server prepared, dependency installation and the
+guided browser installer normally take about 20–30 minutes. DNS, HTTPS
+certificate issuance, and mail-provider approval are outside that estimate.
+
+After installation, the default admin path is /admin123/. Remove the _install
+directory before using the site. Keep production debug display off, configure
+the server/hosting mail transport and cron jobs, then complete a real test
+signup before launch.
+
+Issues: https://github.com/pH7Software/pH7-Social-Dating-CMS/issues
+Discussions: https://github.com/pH7Software/pH7-Social-Dating-CMS/discussions
+
+I really hope you enjoy using pH7Builder as much as I enjoyed creating it! 😊
