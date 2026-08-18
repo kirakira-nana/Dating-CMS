@@ -268,6 +268,7 @@ Framework\Registry\Registry::getInstance()->lang = [
     'ru' => 'русский',
     'sa' => 'العربية',
     'he' => 'עִבְרִית',
+    'ja' => '日本語',
     'jp' => '日本語',
     'cn' => '中文简体',
     'tr' => 'Türkçe',

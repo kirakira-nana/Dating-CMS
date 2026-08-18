@@ -18,7 +18,7 @@ use Smarty;
 abstract class Controller implements Controllable
 {
     public const SOFTWARE_NAME = 'pH7Builder';
-    public const DEFAULT_SITE_NAME = 'My Dating Community';
+    public const DEFAULT_SITE_NAME = 'マイ出会いコミュニティ';
     public const DEFAULT_ADMIN_USERNAME = 'administrator';
     public const SOFTWARE_PREFIX_COOKIE_NAME = 'pH7';
     public const SOFTWARE_WEBSITE = 'https://ph7builder.com';
@@ -34,7 +34,7 @@ abstract class Controller implements Controllable
 
     public const SOFTWARE_BUILD = '1';
 
-    public const DEFAULT_LANG = 'en';
+    public const DEFAULT_LANG = 'ja';
     public const DEFAULT_THEME = 'base';
 
     private const PHP_TIMEZONE_DIRECTIVE = 'date.timezone';

@@ -12,6 +12,7 @@ defined('PH7') or exit('Restricted access');
 
 return array(
     'en' => 'English',
+    'ja' => '日本語',
     'fr' => 'Français',
     'de' => 'Deutsch',
     'nl' => 'Dutch',

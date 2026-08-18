@@ -798,7 +798,7 @@ class InstallController extends Controller
     private function populateSampleUserData(int $iMemberNumber, int $iAffiliateNumber, int $iSubscriberNumber): void
     {
         (new Framework\Translate\Lang)
-            ->setDefaultLang('en_US')
+            ->setDefaultLang('ja_JP')
             ->init();
 
         // Initialize the site's database for "UserCoreModel" and "AffiliateCoreModel" classes

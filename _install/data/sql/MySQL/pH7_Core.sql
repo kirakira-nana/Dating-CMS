@@ -38,8 +38,8 @@ CREATE TABLE IF NOT EXISTS ph7_admins (
   firstName varchar(50) DEFAULT NULL,
   lastName varchar(50) DEFAULT NULL,
   sex enum('male','female') NOT NULL DEFAULT 'male',
-  lang varchar(5) NOT NULL DEFAULT 'en_US',
-  timeZone varchar(6) NOT NULL DEFAULT '-6',
+  lang varchar(5) NOT NULL DEFAULT 'ja_JP',
+  timeZone varchar(6) NOT NULL DEFAULT '+9',
   joinDate datetime DEFAULT NULL,
   lastActivity datetime DEFAULT NULL,
   lastEdit datetime DEFAULT NULL,
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS ph7_members (
   avatar char(5) DEFAULT NULL,
   approvedAvatar tinyint(1) unsigned NOT NULL DEFAULT 1,
   featured tinyint(1) unsigned NOT NULL DEFAULT 0,
-  lang varchar(5) NOT NULL DEFAULT 'en_US',
+  lang varchar(5) NOT NULL DEFAULT 'ja_JP',
   hashValidation varchar(40) DEFAULT NULL,
   isTwoFactorAuth enum('1','0') DEFAULT '0',
   twoFactorAuthSecret varchar(40) DEFAULT NULL,
@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS ph7_affiliates (
   totalPayment decimal(8,2) NOT NULL DEFAULT '0.00',
   lastPayment decimal(8,2) NOT NULL DEFAULT '0.00',
   lastPaymentDate datetime NULL,
-  lang varchar(5) NOT NULL DEFAULT 'en_US',
+  lang varchar(5) NOT NULL DEFAULT 'ja_JP',
   hashValidation varchar(40) DEFAULT NULL,
   isTwoFactorAuth enum('1','0') DEFAULT '0',
   twoFactorAuthSecret varchar(40) DEFAULT NULL,
@@ -684,6 +684,7 @@ CREATE TABLE IF NOT EXISTS ph7_languages_info (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO ph7_languages_info (langId, name, charset, active, direction, author, website, email) VALUES
+('ja_JP', '日本語', 'UTF-8', '1', 'ltr', 'kirakira-nana', 'https://github.com/kirakira-nana', 'seniorninja652@gmail.com'),
 ('en_US', 'English', 'UTF-8', '1', 'ltr', 'Pierre-Henry Soria', 'http://ph7.me', 'hi@ph7.me');
 
 
@@ -904,6 +905,7 @@ CREATE TABLE IF NOT EXISTS ph7_meta_main (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO ph7_meta_main (langId, pageTitle, metaDescription, metaKeywords, headline, slogan, promoText, metaRobots, metaAuthor, metaCopyright, metaRating, metaDistribution, metaCategory) VALUES
+('ja_JP', 'ホーム', '素敵な人と出会い、本物のつながりを育て、ブランドのコミュニティをつくりましょう。', '出会い, コミュニティ, マッチング, ソーシャルネットワーク, デート', 'コミュニティへようこそ', '素敵な人と、本物の出会いを。', 'プロフィールを作成し、近くの人を見つけて、会話を始めましょう。', 'index, follow, all', 'サイト名', 'サイト名', 'general', 'global', 'dating'),
 ('en_US', 'Home', 'Meet people, build genuine connections, and grow a community around your brand.', 'meet people, community, matchmaking, social network, dating', 'Welcome to our community', 'Meet people. Build genuine connections.', 'Create your profile, discover people nearby, and start a conversation.', 'index, follow, all', 'Your Site Name', 'Your Site Name', 'general', 'global', 'dating');
 
 
@@ -980,7 +982,7 @@ CREATE TABLE IF NOT EXISTS ph7_settings (
 
 INSERT INTO ph7_settings (settingName, settingValue, description, settingGroup) VALUES
 ('siteName', @sDefaultSiteName, '', 'general'),
-('defaultLanguage', 'en_US', '', 'language'),
+('defaultLanguage', 'ja_JP', '', 'language'),
 ('defaultTemplate', @sDefaultTemplate, '', 'design'),
 ('navbarType', 'default', 'Choose between "default" or "dark"', 'design'),
 ('backgroundColor', '', 'Override background color. Leave empty to disable', 'design'),
