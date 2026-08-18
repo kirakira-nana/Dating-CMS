@@ -114,7 +114,7 @@ class Tal extends Syntax implements Parsable
 
     public function phpClosingTag()
     {
-        if (!preg_match('#;(?:\s+)?</ph:code>$#', $this->sCode)) {
+        if (!preg_match('#;(?:\s+)?</ph:code>\s*$#', $this->sCode)) {
             $this->sCode = str_replace(
                 '</ph:code>',
                 ';?>',

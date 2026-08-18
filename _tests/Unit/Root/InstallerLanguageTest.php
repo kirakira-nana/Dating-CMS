@@ -58,7 +58,8 @@ final class InstallerLanguageTest extends TestCase
         return [
             ['en'],
             ['es'],
-            ['fr']
+            ['fr'],
+            ['ja']
         ];
     }
 
